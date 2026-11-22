@@ -58,7 +58,7 @@ Fragen und Korpus vom selben Autor stammen. Hybrid ist deshalb Standard.
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt        # einige Minuten (PyTorch)
+pip install -r requirements.txt        
 pip install -e .
 cp .env.example .env                   # LITELLM_BASE_URL, LITELLM_API_KEY, LLM_MODEL eintragen
 ```
@@ -66,10 +66,10 @@ cp .env.example .env                   # LITELLM_BASE_URL, LITELLM_API_KEY, LLM_
 ## Starten
 
 ```bash
-python scripts/check_setup.py          # Umgebung prüfen
-python scripts/build_index.py          # Index bauen (einmalig, lädt beim ersten Mal bge-m3)
-streamlit run app.py                   # Oberfläche im Browser
-pytest                                 # 101 Tests, ohne Netzwerk
+python scripts/check_setup.py          
+python scripts/build_index.py          
+streamlit run app.py                   
+pytest                                 
 ```
 
 ## Skripte
