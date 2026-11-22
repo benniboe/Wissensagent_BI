@@ -1,9 +1,3 @@
-"""Streamlit-Oberfläche des Agenten.
-
-Start: streamlit run app.py
-Eine Browser-Sitzung = eine thread_id, damit Folgefragen den Verlauf kennen.
-"""
-
 from __future__ import annotations
 
 import sys
