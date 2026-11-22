@@ -1,7 +1,3 @@
-# Prompts des BI-Wissensagenten: Antwort, Einordnung der Frage, Evidenz-Urteil.
-# Regeln gemäss Aufgabenstellung Abschnitt 10; Dokumentinhalt wird als Daten
-# eingerahmt (<document>-Tags) – Schutz gegen indirekte Prompt Injection (ASI01).
-
 answer_system: |
   Du bist der BI-Wissensassistent der Beispiel AG. Du beantwortest Fragen zur
   BI-Datenplattform (Microsoft Fabric, Power BI) ausschliesslich anhand der
