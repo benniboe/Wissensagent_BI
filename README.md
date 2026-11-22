@@ -44,16 +44,8 @@ Rechner, nämlich die Frage und die gefundenen Abschnitte.
 | Rückfragen / Folgefragen | 6/6 / 6/6 |
 | Median Antwortzeit | 3.6 s |
 
-BM25 liegt beim Retrieval nur eine Frage vor Hybrid. Das Testset begünstigt exakte Namen, weil
-Fragen und Korpus vom selben Autor stammen. Hybrid ist deshalb Standard.
 
-**Grenzen:**
-- Die Stichprobe ist klein: Ein Fall entspricht 3 bis 6 Prozentpunkten.
-- Regex erkennt nur bekannte Formate.
-- Es gibt keine Berechtigungsprüfung.
-- Das Modell läuft nur mit Temperatur 1.
-
-## Einrichtung (macOS, Python 3.12)
+## Einrichtung
 
 ```bash
 python3.12 -m venv .venv
@@ -72,33 +64,6 @@ streamlit run app.py
 pytest                                 
 ```
 
-## Skripte
-
-| Skript | Zweck |
-|---|---|
-| `check_setup.py` | prüft Python, Pakete, `.env` und den Git-Ausschluss von `.env` |
-| `check_llm.py` | testet die Verbindung zu LiteLLM (`--list` zeigt die verfügbaren Modelle) |
-| `build_synthetic_corpus.py` | erzeugt den Demo-Korpus aus `data/synthetic_demo/source/` |
-| `build_index.py` | zerlegt den Korpus in Chunks, bettet sie ein und baut die Indizes |
-| `inspect_chunks.py` | zeigt Chunk-Statistik oder alle Chunks eines Dokuments |
-| `search.py` | Suche ohne LLM, zeigt Ränge und Scores (`--mode dense\|sparse\|hybrid`) |
-| `ask.py` | einfache RAG-Kette ohne Agent, zum Vergleich |
-| `chat.py` | Chat mit dem Agenten im Terminal (`--debug` zeigt den Pfad) |
-| `evaluate_retrieval.py` | misst Hit@k, MRR und P@5 für 3 Verfahren × 2 Chunk-Grössen |
-| `calibrate_threshold.py` | zeigt die Ähnlichkeiten je Testfrage, um die Schwelle zu wählen |
-| `evaluate_agent.py` | schickt alle Testfälle durch den Agenten und prüft das Verhalten automatisch |
-| `scan_sensitive.py` | sucht in Dokumenten nach Secrets und Personendaten (maskierter Bericht) |
-
-## Struktur
-
-| Ordner | Inhalt |
-|---|---|
-| `src/bi_agent/` | Paket: `agent/` (State, Nodes, Graph, Guardrails), `retrieval/`, `ingestion/`, `llm/`, `evaluation/`, `utils/` |
-| `config/` | Parameter, Prompts, Guardrail-Regeln, Suchmuster, ohne Secrets |
-| `scripts/` | Kommandozeilen-Werkzeuge (Tabelle oben) |
-| `tests/` | Pytest; der Graph wird mit Fakes getestet, ohne LLM |
-| `data/synthetic_demo/` | Faktenblatt der fiktiven Firma, Quellen (Markdown) und generierter Korpus |
-| `data/evaluation/` | 31 Testfälle mit Ground Truth, aufgeteilt in Dev und Test |
 
 Diese Dateien werden lokal erzeugt und von Git ausgeschlossen:
 - `.env`
