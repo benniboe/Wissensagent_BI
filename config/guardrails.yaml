@@ -1,13 +1,5 @@
-# Deterministische Eingabeprüfung – erste Station im Graphen.
-#
-# Diese Muster erkennen ANFRAGEN (jemand will ein Passwort, eine Änderung,
-# eine Regelumgehung). Die Muster in sensitive_patterns.yaml erkennen dagegen
-# Secrets, die IM TEXT STEHEN – beide werden geprüft.
-#
-# Bewusst eng formuliert: Prozessfragen wie "Wo werden Zugangsdaten verwaltet?"
-# sollen durchgehen (dokumentiert in DEMO-02). Umschreibungen, die hier nicht
-# greifen, fängt das Sicherheitsflag der LLM-Klassifikation ab (probabilistisch).
-# Grenzen: andere Sprachen, Tippfehler, kreative Umschreibungen.
+# Deterministische Eingabeprüfung
+
 
 input_rules:
   - id: REQ_SECRET
@@ -31,7 +23,5 @@ input_rules:
     reason: prompt_injection
     regex: '(?i)(ignorier\w*\s+(\w+\s+){0,3}(anweisungen|regeln|instruktionen|vorgaben)|ignore\s+(\w+\s+){0,3}(instructions|rules)|vergiss\s+(\w+\s+){0,3}(anweisungen|regeln)|system[\s_-]?prompt|du\s+bist\s+(jetzt|ab\s+sofort|nun)|you\s+are\s+now|developer\s+mode|jailbreak|deine\s+(regeln|anweisungen)\s+(gelten|sind)\s+nicht)'
 
-# Zusätzlich: Secret-FORMATE in der Eingabe (jemand fügt einen Schlüssel ein).
-# Diese Kategorien aus sensitive_patterns.yaml führen zur Ablehnung, damit der
-# Text nicht an das Sprachmodell geht.
+# Zusätzlich: Secret-FORMATE in der Eingabe
 block_secret_categories_in_input: [secret]
