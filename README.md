@@ -33,7 +33,7 @@ Frage ─► Normalisieren ─► Regex-Prüfung ─► Einordnung (LLM) ─► 
 Das Sprachmodell läuft über FHNW LiteLLM (Claude Haiku 5.5). Nur dafür verlassen Daten den
 Rechner, nämlich die Frage und die gefundenen Abschnitte.
 
-## Ergebnisse (synthetischer Korpus, 20.11.2026)
+## Ergebnisse
 
 | Messung | Ergebnis |
 |---|---|
