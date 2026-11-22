@@ -1,0 +1,150 @@
+# Automatische Suchmuster für die Korpusbereinigung (scripts/scan_sensitive.py).
+#
+# WICHTIG: Diese Muster finden KANDIDATEN für die manuelle Prüfung. Sie beweisen
+# nicht, dass ein Dokument sauber ist. Namen, Kundennamen, sensible Architektur-
+# details und Kontextwissen erkennt ein Regex nicht zuverlässig -> manuelle
+# Endkontrolle bleibt Pflicht.
+#
+# severity:
+#   block  = muss vor Freigabe entfernt oder ersetzt sein
+#   review = Fall-zu-Fall-Entscheid durch Bearbeiter/in, Entscheid im Inventar notieren
+#
+# Regex-Dialekt: Python `re`, ohne Flags ausser wo (?i) angegeben.
+
+patterns:
+  # ---------- A. Secrets und Zugangsdaten ----------
+  - id: SEC_PASSWORD_ASSIGNMENT
+    category: secret
+    severity: block
+    regex: '(?i)\b(pass(wort|word)?|pwd|kennwort)\s*[:=]\s*\S+'
+  - id: SEC_KEY_ASSIGNMENT
+    category: secret
+    severity: block
+    regex: '(?i)\b(api[_-]?key|client[_-]?secret|secret|access[_-]?token|token)\s*[:=]\s*\S{8,}'
+  - id: SEC_BEARER
+    category: secret
+    severity: block
+    regex: '(?i)\bbearer\s+[a-z0-9\-._~+/]{20,}=*'
+  - id: SEC_JWT
+    category: secret
+    severity: block
+    regex: '\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'
+  - id: SEC_AZURE_CONNECTION_STRING
+    category: secret
+    severity: block
+    regex: '(?i)(AccountKey|SharedAccessKey|SharedAccessSignature|sig)=[A-Za-z0-9%+/=]{16,}'
+  - id: SEC_PRIVATE_KEY
+    category: secret
+    severity: block
+    regex: '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+  - id: SEC_OPENAI_STYLE_KEY
+    category: secret
+    severity: block
+    regex: '\bsk-[A-Za-z0-9_-]{16,}'
+  - id: SEC_GENERIC_LONG_TOKEN
+    category: secret
+    severity: review
+    # lange Zeichenketten ohne Leerzeichen mit Ziffern UND Buchstaben (Base64/Hex-Tokens)
+    regex: '\b(?=[A-Za-z0-9+/_-]*\d)(?=[A-Za-z0-9+/_-]*[A-Za-z])[A-Za-z0-9+/_-]{32,}={0,2}'
+
+  # ---------- B. Produktive Endpunkte, IDs, Server ----------
+  - id: ID_GUID
+    category: technical_id
+    severity: block
+    # Fabric-Workspace-/Item-IDs, Entra Tenant-/App-IDs sind GUIDs
+    regex: '\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b'
+  - id: URL_MICROSOFT_TENANT
+    category: endpoint
+    severity: block
+    regex: '(?i)https?://[^\s"<>]*(powerbi\.com|fabric\.microsoft\.com|onelake\.(dfs|blob)\.fabric\.microsoft\.com|sharepoint\.com|dynamics\.com|azure\.(com|net)|windows\.net)[^\s"<>]*'
+  - id: URL_ANY
+    category: endpoint
+    severity: review
+    regex: '(?i)\bhttps?://[^\s"<>]+'
+  - id: HOST_SQL_ENDPOINT
+    category: endpoint
+    severity: block
+    regex: '(?i)\b[a-z0-9-]+\.(database\.windows\.net|datawarehouse\.fabric\.microsoft\.com|sql\.azuresynapse\.net)\b'
+  - id: CONN_SERVER_ASSIGNMENT
+    category: endpoint
+    severity: block
+    regex: '(?i)\b(server|data source|host|hostname)\s*=\s*[^;\s]+'
+  - id: CONN_JDBC_ODBC
+    category: endpoint
+    severity: block
+    regex: '(?i)\b(jdbc|odbc):[^\s]+'
+  - id: HOST_INTERNAL_NAME
+    category: endpoint
+    severity: review
+    regex: '(?i)\b[a-z0-9-]+\.(local|intern|internal|corp|lan|ad)\b'
+  - id: PATH_UNC
+    category: endpoint
+    severity: block
+    regex: '\\\\[A-Za-z0-9._-]+\\[^\s]+'
+  - id: NET_IPV4
+    category: endpoint
+    severity: block
+    regex: '\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b'
+
+  # ---------- C. Personenbezogene Daten ----------
+  - id: PII_EMAIL
+    category: personal_data
+    severity: block
+    regex: '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
+  - id: PII_PHONE_CH
+    category: personal_data
+    severity: block
+    regex: '(?:\+41|0041|\b0)\s?\(?0?\)?\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}\b'
+  - id: PII_AHV
+    category: personal_data
+    severity: block
+    regex: '\b756\.?\d{4}\.?\d{4}\.?\d{2}\b'
+  - id: PII_PERSONAL_ACCOUNT
+    category: personal_data
+    severity: review
+    # Kürzel-Konten wie "svc_powerbi", "adm-mueller", "u12345"
+    # Trennzeichen Pflicht, sonst trifft es normale Wörter wie "Umsatz" oder "Admin"
+    regex: '\b(?:svc|adm|admin|usr|SVC|ADM|USR)[_-][A-Za-z0-9]{3,}\b|\b[uU]\d{4,}\b'
+
+  # ---------- D. Finanz-, Kunden-, Auftragsdaten ----------
+  - id: FIN_IBAN
+    category: financial
+    severity: block
+    regex: '(?i)\b[A-Z]{2}\d{2}(?:\s?[A-Z0-9]{4}){3,7}\s?[A-Z0-9]{1,4}\b'
+  - id: FIN_AMOUNT_CHF
+    category: financial
+    severity: review
+    regex: '(?i)\b(CHF|EUR|Fr\.)\s?\d[\d''’.,\s]*\b|\b\d[\d''’.,]*\s?(CHF|EUR|Mio\.?|Mrd\.?)\b'
+  - id: BIZ_ORDER_OR_CUSTOMER_NO
+    category: business_data
+    severity: review
+    regex: '(?i)\b(auftrag|bestellung|kunde|kunden|debitor|kreditor|rechnung|order|customer)(s)?[\s-]*(nr\.?|nummer|no\.?|id)?\s*[:#]?\s*\d{4,}\b'
+
+  # ---------- E. Hinweiswörter für manuelle Prüfung ----------
+  - id: KW_CONFIDENTIAL_MARKER
+    category: classification_marker
+    severity: review
+    regex: '(?i)\b(vertraulich|confidential|streng vertraulich|intern|internal use only|nicht weitergeben)\b'
+  - id: KW_PROMPT_INJECTION_LIKE
+    category: injection_like
+    severity: review
+    # Anweisungsartiger Text in Dokumenten (später auch für Context-Admission-Gate)
+    regex: '(?i)(ignoriere (alle )?(vorherigen|bisherigen) (anweisungen|regeln)|ignore (all )?(previous|prior) instructions|system ?prompt|du bist jetzt|you are now)'
+
+# Lokale Begriffslisten (eine Zeile = ein Begriff, Gross-/Kleinschreibung egal).
+# Diese Dateien enthalten selbst sensible Begriffe und liegen deshalb in
+# data/review/ (gitignored). Beispiel: Personennamen, Kunden, Lieferanten,
+# interne Systemnamen, Workspace-Namen.
+term_lists:
+  - id: TERM_PERSON_NAMES
+    category: personal_data
+    severity: block
+    file: data/review/terms_person_names.txt
+  - id: TERM_CUSTOMERS_SUPPLIERS
+    category: business_data
+    severity: block
+    file: data/review/terms_customers.txt
+  - id: TERM_INTERNAL_SYSTEMS
+    category: architecture
+    severity: review
+    file: data/review/terms_internal_systems.txt

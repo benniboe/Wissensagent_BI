@@ -1,0 +1,37 @@
+# Deterministische Eingabeprüfung – erste Station im Graphen.
+#
+# Diese Muster erkennen ANFRAGEN (jemand will ein Passwort, eine Änderung,
+# eine Regelumgehung). Die Muster in sensitive_patterns.yaml erkennen dagegen
+# Secrets, die IM TEXT STEHEN – beide werden geprüft.
+#
+# Bewusst eng formuliert: Prozessfragen wie "Wo werden Zugangsdaten verwaltet?"
+# sollen durchgehen (dokumentiert in DEMO-02). Umschreibungen, die hier nicht
+# greifen, fängt das Sicherheitsflag der LLM-Klassifikation ab (probabilistisch).
+# Grenzen: andere Sprachen, Tippfehler, kreative Umschreibungen.
+
+input_rules:
+  - id: REQ_SECRET
+    reason: secret_request
+    regex: '(?i)\b(wie\s+(lautet|heisst|ist)|gib|zeig|nenn|verrat|schick|sende|kopier|what\s+is|give|show|tell)\w*\b.{0,60}\b(passw[oö]rt\w*|password\w*|kennw[oö]rt\w*|pwd|api[\s_-]?keys?|access[\s_-]?tokens?|tokens?|secrets?|client[\s_-]?secrets?|zugangsdaten|anmeldedaten|credentials?|connection[\s_-]?strings?|verbindungszeichenfolge\w*)\b'
+  - id: REQ_SECRET_SHORT
+    reason: secret_request
+    # sehr kurze Direktanfragen wie "Passwort Gateway?" oder "API-Key bitte"
+    regex: '(?i)^\W*(das\s+)?(passw[oö]rt|password|kennw[oö]rt|api[\s_-]?key|token|zugangsdaten|credentials?)\b[^.?!]{0,40}[?!]?\s*$'
+  - id: REQ_CHANGE_IMPERATIVE
+    reason: production_change
+    # Befehl am Satzanfang: "Lösche …", "Starte … neu", "Deploye …"
+    # Nur Verben mit Wirkung auf Systeme; "Erstelle mir eine Übersicht" bleibt erlaubt.
+    regex: '(?i)^\W*(bitte\s+)?(l[öo]sche|entferne|starte|stoppe|ändere|aendere|deploye|veröffentliche|aktualisiere|delete|drop|restart|deploy|publish|trigger)\b'
+  - id: REQ_CHANGE_POLITE
+    reason: production_change
+    # "Kannst du … löschen", "bitte … neu starten"
+    # Ausgenommen sind Erklärfragen ("Kannst du erklären, wie man … aktualisiert?").
+    regex: '(?i)^(?!.*\b(erklär\w*|erklaer\w*|wie\s+man|wie\s+kann|wie\s+funktioniert|beschreib\w*|was\s+passiert|explain|how\s+to)\b).*\b(kannst|könntest|koenntest|würdest|wuerdest|can|could|please|bitte)\b.{0,80}\b(l[öo]schen|entfernen|neu\s+starten|starten|stoppen|ändern|aendern|deployen|bereitstellen|veröffentlichen|aktualisieren|ausführen|ausfuehren|delete|restart|deploy|publish|refresh|trigger)\b'
+  - id: REQ_INJECTION
+    reason: prompt_injection
+    regex: '(?i)(ignorier\w*\s+(\w+\s+){0,3}(anweisungen|regeln|instruktionen|vorgaben)|ignore\s+(\w+\s+){0,3}(instructions|rules)|vergiss\s+(\w+\s+){0,3}(anweisungen|regeln)|system[\s_-]?prompt|du\s+bist\s+(jetzt|ab\s+sofort|nun)|you\s+are\s+now|developer\s+mode|jailbreak|deine\s+(regeln|anweisungen)\s+(gelten|sind)\s+nicht)'
+
+# Zusätzlich: Secret-FORMATE in der Eingabe (jemand fügt einen Schlüssel ein).
+# Diese Kategorien aus sensitive_patterns.yaml führen zur Ablehnung, damit der
+# Text nicht an das Sprachmodell geht.
+block_secret_categories_in_input: [secret]

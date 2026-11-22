@@ -1,0 +1,33 @@
+# Getestet mit Python 3.12 am 16.11.2026 (Versionen = damals aktuelle Releases).
+# Untergrenzen statt exakter Pins, damit pip auf macOS passende Wheels findet.
+# Exakten Stand nach erfolgreicher Installation festhalten:
+#   pip freeze > requirements.lock.txt
+
+# --- Agent-Orchestrierung (SW5, SW8) ---
+langgraph>=1.2,<2          # StateGraph, Conditional Edges, Checkpointer (InMemorySaver)
+langchain-core>=1.8,<2     # Messages, Documents, Prompt-Bausteine
+langchain-openai>=1.8,<2   # ChatOpenAI -> FHNW LiteLLM (OpenAI-kompatibel)
+
+# --- RAG (SW7) ---
+langchain-text-splitters>=1.1,<2   # RecursiveCharacterTextSplitter, Token-basiert
+langchain-chroma>=1.1,<2           # Chroma-Anbindung
+chromadb>=1.5,<2                   # lokaler Vector Store (persistiert auf Disk)
+langchain-huggingface>=1.2,<2      # HuggingFaceEmbeddings
+sentence-transformers>=6.0,<7      # lokales mehrsprachiges Embedding-Modell
+rank-bm25>=0.2.2,<0.3              # BM25 (Sparse Retrieval)
+
+# --- Dokumentformate ---
+pypdf>=7.0,<8          # Text + Seitennummern aus nativen PDFs
+python-docx>=1.2,<2    # Text + Überschriften aus DOCX
+
+# --- Struktur, Konfiguration ---
+pydantic>=2.14,<3      # strukturierte LLM-Ausgaben, Settings-Validierung
+python-dotenv>=1.2,<2  # .env laden
+pyyaml>=6.0,<7         # config/*.yaml
+
+# --- UI, Evaluation, Tests, Tracing ---
+streamlit>=1.67,<2
+pandas>=3.0,<4
+pytest>=9.0,<10
+fpdf2>=2.8,<3          # nur zum Erzeugen des synthetischen PDF (scripts/build_synthetic_corpus.py)
+langsmith>=0.14,<1

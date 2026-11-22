@@ -1,0 +1,40 @@
+# Parameter ohne Secrets. Secrets und Endpunkte kommen aus .env.
+
+paths:
+  synthetic_corpus: data/synthetic_demo
+  index_dir: data/index
+  evaluation_dir: data/evaluation
+
+chunking:
+  # Gemessen in TOKENS des Embedding-Tokenizers (nicht Zeichen, nicht Wörter).
+  unit: tokens_of_embedding_model
+  configs:
+    small:
+      chunk_size: 400
+      chunk_overlap: 80
+    large:
+      chunk_size: 800
+      chunk_overlap: 150
+  default: small   # Entscheid 20.11.2026: small besser bei allen drei Verfahren (Hit@1, MRR)
+
+retrieval:
+  top_k: 5            # Kandidaten, die an den Evidence-Check gehen
+  eval_k: [1, 3, 5]   # Hit@1 ergänzt: bei nur ~20-40 Chunks ist Hit@5 fast zu leicht
+  rrf_k: 60           # Konstante nach Cormack et al. (2009), wie in SW7
+  candidate_k: 20     # Tiefe der Einzellisten vor der RRF-Fusion
+  # Entscheid 20.11.2026: hybrid. BM25 lag 1 Frage vorne (Rauschen, Testset begünstigt
+  # Stichworte); hybrid ist robuster und liefert Dense-Scores für den Evidence-Check.
+  default_mode: hybrid
+  # Evidence-Check Stufe 1: liegt die beste Dense-Ähnlichkeit darunter, wird ohne
+  # LLM-Urteil eskaliert (scripts/calibrate_threshold.py, nur Dev-Fragen).
+  # Kalibriert 20.11.2026: tiefste beantwortbare Dev-Frage 0.565 minus Marge 0.1;
+  # auf Test geprüft (keine beantwortbare Frage darunter). Gruppen überlappen
+  # (0.509–0.533) -> Stufe 2 (LLM-Urteil) trägt die eigentliche Entscheidung.
+  min_dense_similarity: 0.45
+
+agent:
+  max_history_messages: 10   # Trimming: was das LLM von der Sitzung sieht
+  max_query_chars: 2000      # harte Eingabegrenze (deterministisch)
+  structured_output_method: json_schema   # getestet: json_schema und function_calling
+  escalation_contact: BI-Fachrolle        # erste Anlaufstelle gemäss DEMO-01
+  logs_dir: logs                          # gitignored

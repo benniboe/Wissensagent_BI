@@ -1,0 +1,86 @@
+# Faktenblatt der fiktiven "Beispiel AG" – einzige Quelle der Wahrheit für den
+# synthetischen Demo-Korpus und die erwarteten Antworten in eval_questions.csv.
+#
+# SYNTHETISCH. Keine realen Daten, keine Stämpfli-Fakten.
+# Wird NICHT indexiert (Unterstrich-Präfix, ausserhalb von corpus/).
+#
+# Abbildung der realen Dokumentationslage (Angabe der BI-Fachperson, 18.11.2026):
+#   gut dokumentiert:  Architektur, Quellsysteme, Ingestion, Bronze/Silver/Gold,
+#                      Pipelines/Scheduling, Semantic Models, Power-BI-Nutzung,
+#                      Workspaces/Deployment, Schnittstellen/Lineage, Reporting-Zweck
+#   kaum dokumentiert: KPI-Anforderungen, fachliche KPI-Definitionen, DAX, Troubleshooting
+#   nur grob:          Zuständigkeiten (fachlich/technisch, nicht pro Objekt)
+#   Sprache:           Deutsch
+
+company:
+  name: Beispiel AG
+  industry: Herstellung und Vertrieb von Gartenmöbeln und Outdoor-Zubehör
+  sites: [Werk Nord, Werk Süd]
+  sales_regions: [Nord, Mitte, Süd]
+
+source_systems:
+  SRC_ERP: {name: ERP, content: Aufträge, Rechnungen, Artikel, Lager, location: on-premises}
+  SRC_CRM: {name: CRM, content: Kunden, Verkaufschancen (Opportunities), location: Cloud, access: REST-API}
+  SRC_PPS: {name: Produktionsplanungssystem (PPS), content: Fertigungsaufträge, Maschinenzeiten, Ausschuss, location: on-premises}
+  SRC_PLAN: {name: Planungsdateien (Excel), content: Budget und Absatzplanung, location: SharePoint-Ordner "BI-Planung"}
+
+layers:
+  bronze: {item: LH_Bronze, type: Lakehouse, purpose: Rohdaten 1:1 wie geliefert, Delta-Format, technische Spalten _load_ts und _source}
+  silver: {item: LH_Silver, type: Lakehouse, purpose: bereinigt, typisiert, dedupliziert, harmonisierte Schlüssel, noch nicht aggregiert, built_by: Notebooks NB_Silver_*}
+  gold:   {item: WH_Gold, type: Warehouse, purpose: Sternschema für Reporting, built_by: Stored Procedures SP_Gold_*}
+gold_tables: [fact_verkauf, fact_opportunity, fact_produktion, fact_budget, dim_kunde, dim_artikel, dim_datum, dim_werk, dim_region]
+
+ingestion:
+  PL_ERP_Orders_Daily: {source: SRC_ERP, tool: Data Pipeline Copy Activity, via: On-Premises-Datengateway, mode: inkrementell nach Änderungsdatum (Watermark), time: "02:00", target: LH_Bronze}
+  PL_PPS_Production_Daily: {source: SRC_PPS, tool: Data Pipeline Copy Activity, via: On-Premises-Datengateway, mode: inkrementell, time: "02:30", target: LH_Bronze}
+  DF_CRM_Daily: {source: SRC_CRM, tool: Dataflow Gen2, via: REST-API, mode: Vollladung, time: "03:00", target: LH_Bronze}
+  DF_Plan_Budget: {source: SRC_PLAN, tool: Dataflow Gen2, mode: Vollladung, time: "Montag 06:00 (wöchentlich)", target: LH_Bronze}
+
+orchestration_current:   # DEMO-03, Version 2.0, gültig ab 2026-03-01
+  PL_Master_Daily: {start: "02:00", steps: [PL_ERP_Orders_Daily, PL_PPS_Production_Daily, DF_CRM_Daily, NB_Silver_Transform, SP_Gold_Load]}
+  refresh_SM_Verkauf: "06:30 täglich"
+  refresh_SM_Produktion: "07:00 täglich"
+  retry: 2 Wiederholungen im Abstand von 15 Minuten
+  on_failure: E-Mail an Verteilerliste BI-Plattformteam; nachgelagerte Schritte laufen nicht; Gold bleibt auf Vortagesstand
+orchestration_outdated:  # DEMO-08, Version 1.0, ersetzt durch DEMO-03
+  PL_Master_Daily: {start: "01:00"}
+  refresh_SM_Verkauf: "05:00 täglich"
+
+semantic_models:
+  SM_Verkauf: {mode: Direct Lake, source: WH_Gold, tables: [fact_verkauf, fact_opportunity, fact_budget, dim_kunde, dim_artikel, dim_datum, dim_region], measures: [Umsatz Netto, Umsatz Vorjahr, Auftragseingang, Anzahl Aufträge, Pipeline-Volumen, Budget Umsatz], rls: nach Verkaufsregion}
+  SM_Produktion: {mode: Import, source: WH_Gold, tables: [fact_produktion, dim_werk, dim_artikel, dim_datum], measures: [Produktionsmenge, Maschinenauslastung, Ausschussquote], rls: keine}
+  dax_documented: false
+
+reports:
+  RPT_Verkaufsuebersicht: {model: SM_Verkauf, audience: Verkaufsleitung, purpose: tägliche Umsatzentwicklung nach Region und Artikelgruppe}
+  RPT_Kundenanalyse: {model: SM_Verkauf, audience: Aussendienst, purpose: Umsatzentwicklung pro Kunde und offene Verkaufschancen}
+  RPT_Auftragseingang: {model: SM_Verkauf, audience: Verkaufsinnendienst, purpose: wöchentlicher Auftragseingang}
+  RPT_Produktionsleistung: {model: SM_Produktion, audience: Produktionsleitung, purpose: Produktionsmenge, Maschinenauslastung, Ausschuss pro Werk}
+  RPT_Management_Cockpit: {alias: Management-Cockpit, model: "zusammengesetzt: SM_Verkauf + SM_Produktion per DirectQuery", workspace: BI Management, audience: Geschäftsleitung, purpose: monatliche Gesamtsicht Verkauf und Produktion inkl. Budgetvergleich}
+apps: {App Verkauf: [RPT_Verkaufsuebersicht, RPT_Kundenanalyse, RPT_Auftragseingang], App Produktion: [RPT_Produktionsleistung], App Management: [RPT_Management_Cockpit]}
+
+workspaces:
+  pattern: "<Bereich> [DEV] / [TEST] / [PROD]"
+  areas: {BI Plattform: Lakehouses, Warehouse, Pipelines, Notebooks, BI Verkauf: SM_Verkauf und Reports, BI Produktion: SM_Produktion und Reports, BI Management: RPT_Management_Cockpit}
+  git: Git-Integration nur in [DEV] (Azure-DevOps-Repository)
+  deployment: Fabric-Bereitstellungspipelines DEV -> TEST -> PROD; Fachabnahme in TEST; Deployment nach PROD durch BI-Plattformteam; Bereitstellungsregeln stellen Verbindungen pro Stufe um
+
+responsibilities:   # nur grob dokumentiert (DEMO-01)
+  fachlich: Fachbereiche (Verkauf -> Verkaufsleitung, Produktion -> Produktionsleitung) für Inhalte, Anforderungen, Abnahme
+  technisch: BI-Plattformteam für Plattform, Pipelines, Modelle, Deployment
+  first_contact: BI-Fachrolle
+  per_object_owner: nicht dokumentiert
+
+interview_notes:   # DEMO-07, mündlich, nicht offiziell dokumentiert
+  auftragseingang: zählt nach Auftragsdatum, nicht nach Lieferdatum
+  umsatz_netto: nach Rabatten, ohne MWST, Gutschriften werden abgezogen
+  deckungsbeitrag: keine einheitliche Definition; Controlling und Verkauf rechnen unterschiedlich
+  tip_refresh_failed: zuerst prüfen, ob PL_Master_Daily in der Nacht erfolgreich war
+  tip_gateway: Gateway-Fehler nicht selbst beheben, BI-Plattformteam informieren
+  tip_cockpit_empty_month_start: Budgetwerte fehlen, wenn Planungsdatei noch nicht im SharePoint-Ordner liegt
+
+deliberately_missing:   # Testfälle für "nicht dokumentiert"
+  - DAX/Berechnungslogik aller Measures (z. B. Ausschussquote)
+  - Lizenzen
+  - Fehlermeldungen der Kapazität (z. B. "Capacity limit exceeded")
+  - Owner pro Workspace, Modell oder Pipeline

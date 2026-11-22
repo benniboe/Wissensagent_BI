@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bi-agent"
+version = "0.1.0"
+description = "BI-Wissensagent: LangGraph-RAG-Prototyp (FHNW-Studienprojekt)"
+requires-python = ">=3.11,<3.13"
+readme = "README.md"
+# Abhängigkeiten werden über requirements.txt installiert (eine Quelle der Wahrheit).
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "llm: Test ruft das echte FHNW-LiteLLM auf (braucht .env, kostet Tokens)",
+]

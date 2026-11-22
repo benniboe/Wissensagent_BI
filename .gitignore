@@ -1,0 +1,89 @@
+# =====================================================================
+# .gitignore – BI-Wissensagent (FHNW-Studienprojekt)
+#
+# Grundsatz: Ins Repository gehören nur Code, Konfiguration ohne Secrets
+# und der SYNTHETISCHE Demo-Korpus. Originaldokumente liegen nie im Repo-Ordner;
+# diese Datei ist nur die zweite Verteidigungslinie.
+# =====================================================================
+
+# ---------- Secrets und lokale Konfiguration ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials*.json
+service_account*.json
+
+# ---------- Korpus: alles ausser synthetischem Demo-Korpus sperren ----------
+# Originale (sollten ohnehin AUSSERHALB des Repos liegen)
+data/original/
+original/
+# Zwischenstände der Bereinigung (Scan-Reports, Arbeitskopien)
+data/review/*
+!data/review/.gitkeep
+# Bereinigter Stämpfli-Korpus: bleibt lokal, auch nach Freigabe
+data/sanitized/*
+!data/sanitized/.gitkeep
+# Ausgefülltes Inventar und Freigaben mit echten Dateinamen
+data/**/corpus_inventory*.csv
+data/**/release_approval*.md
+# Evaluationsergebnisse auf dem bereinigten Korpus (nur aggregiert berichten)
+data/evaluation/results_sanitized*
+data/evaluation/*sanitized*
+
+# Office-/PDF-Dateien ausserhalb des Demo-Korpus grundsätzlich sperren
+*.docx
+*.doc
+*.pdf
+*.xlsx
+*.xls
+*.pptx
+*.msg
+*.eml
+!data/synthetic_demo/**/*.docx
+!data/synthetic_demo/**/*.pdf
+# Lock-Dateien von Word
+~$*
+
+# ---------- Indizes, Caches, Logs ----------
+data/index/*
+!data/index/.gitkeep
+chroma/
+*.sqlite3
+logs/
+*.log
+traces/
+.cache/
+.hf_cache/
+
+# ---------- Python ----------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# ---------- Editor / macOS ----------
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# ---------- Streamlit ----------
+.streamlit/secrets.toml
