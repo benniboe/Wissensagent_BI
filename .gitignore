@@ -1,9 +1,5 @@
 # =====================================================================
-# .gitignore – BI-Wissensagent (FHNW-Studienprojekt)
-#
-# Grundsatz: Ins Repository gehören nur Code, Konfiguration ohne Secrets
-# und der SYNTHETISCHE Demo-Korpus. Originaldokumente liegen nie im Repo-Ordner;
-# diese Datei ist nur die zweite Verteidigungslinie.
+# .gitignore – BI-Wissensagent
 # =====================================================================
 
 # ---------- Secrets und lokale Konfiguration ----------
@@ -18,8 +14,8 @@ secrets/
 credentials*.json
 service_account*.json
 
-# ---------- Korpus: alles ausser synthetischem Demo-Korpus sperren ----------
-# Originale (sollten ohnehin AUSSERHALB des Repos liegen)
+# ---------- alles ausser synthetischem Demo-Korpus sperren ----------
+# Originale
 data/original/
 original/
 # Zwischenstände der Bereinigung (Scan-Reports, Arbeitskopien)
