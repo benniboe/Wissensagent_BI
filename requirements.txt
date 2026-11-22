@@ -1,7 +1,7 @@
 # --- Agent-Orchestrierung  ---
-langgraph>=1.2,<2          # StateGraph, Conditional Edges, Checkpointer (InMemorySaver)
-langchain-core>=1.8,<2     # Messages, Documents, Prompt-Bausteine
-langchain-openai>=1.8,<2   # ChatOpenAI -> FHNW LiteLLM (OpenAI-kompatibel)
+langgraph>=1.2,<2          
+langchain-core>=1.8,<2     
+langchain-openai>=1.8,<2   
 
 # --- RAG  ---
 langchain-text-splitters>=1.1,<2   
